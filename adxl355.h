@@ -19,11 +19,31 @@
 #define _ADXL355_STATUS_FIFO_FULL	1<<1
 #define _ADXL355_STATUS_DATA_RDY	0
 
+// Indices for adxl355_axis_get_data_raw() and adxl355_axis_get_data_raw_timeout()
+#define ADXL355_INDEX_X				0
+#define ADXL355_INDEX_Y				1
+#define ADXL355_INDEX_Z				2
+
 typedef struct
 {
 	i2c_inst_t *i2c_port;
 	uint8_t i2c_addr;
 } adxl355_sensor;
+
+typedef union
+{
+	int32_t axis[3];
+	uint8_t raw[12];
+} adxl355_axis_data;
+
+// Always 0xAD
+uint8_t adxl355_get_company_id (adxl355_sensor *sensor);
+// Always 0x1D
+uint8_t adxl355_get_mems_id (adxl355_sensor *sensor);
+// Always 0xED (355 in octal, because it's the adxl355)
+uint8_t adxl355_get_device_id (adxl355_sensor *sensor);
+
+uint8_t adxl355_get_revision_id (adxl355_sensor *sensor);
 
 uint8_t adxl355_get_status (adxl355_sensor *sensor);
 #define adxl355_is_nvm_busy(status)				((status & _ADXL355_STATUS_NVM_BUSY) != 0)
@@ -33,7 +53,18 @@ uint8_t adxl355_get_status (adxl355_sensor *sensor);
 #define adxl355_is_data_ready(status)			((status & _ADXL355_STATUS_DATA_RDY) != 0)
 
 uint8_t adxl355_get_num_fifo_entries (adxl355_sensor *sensor);
-// Function for getting temperature out of TEMP1 and TEMP2
+
+uint16_t adxl355_get_temp (adxl355_sensor *sensor);
+bool adxl355_get_temp_raw (adxl355_sensor *sensor, uint8_t *temp);
+
+int adxl355_axis_get_data (adxl355_sensor *sensor, adxl355_axis_data *data);
+int adxl355_axis_get_data_timeout (adxl355_sensor *sensor, adxl355_axis_data *data, unsigned int timeout_s);
+int adxl355_axis_get_data_raw (adxl355_sensor *sensor, uint8_t axis, uint8_t *data);
+int adxl355_axis_get_data_raw_timeout (adxl355_sensor *sensor, uint8_t axis, uint8_t *data, unsigned int timeout_s);
+
+int adxl355_get_x (adxl355_axis_data *data);
+int adxl355_get_y (adxl355_axis_data *data);
+int adxl355_get_z (adxl355_axis_data *data);
 
 #define ADXL355_REG_DEVID_AD		0x00		// Read
 #define ADXL355_REG_DEVID_MST		0x01		// Read
@@ -72,5 +103,19 @@ uint8_t adxl355_get_num_fifo_entries (adxl355_sensor *sensor);
 #define ADXL355_REG_POWER_CTL		0x2D		// Read / Write
 #define ADXL355_REG_SELF_TEST		0x2E		// Read / Write
 #define ADXL355_REG_RESET			0x2F		// Write
+
+#define ADXL355_REG_DATA_BEGIN_AXIS	ADXL355_REG_XDATA3
+
+#define ADXL355_REG_DATA_BEGIN_X	ADXL355_REG_XDATA3
+#define ADXL355_REG_DATA_BEGIN_Y	ADXL355_REG_YDATA3
+#define ADXL355_REG_DATA_BEGIN_Z	ADXL355_REG_ZDATA3
+
+int adxl355_write (adxl355_sensor *sensor, uint8_t reg_addr, uint8_t command, bool no_stop);
+
+int adxl355_write_timeout (adxl355_sensor *sensor, uint8_t reg_addr, uint8_t command, bool no_stop, unsigned int timeout_s);
+
+int adxl355_read (adxl355_sensor *sensor, uint8_t reg_addr, uint8_t *buffer, size_t length, bool no_stop);
+
+int adxl355_read_timeout (adxl355_sensor *sensor, uint8_t reg_addr, uint8_t *buffer, size_t length, bool no_stop, unsigned int timeout_s);
 
 #endif
