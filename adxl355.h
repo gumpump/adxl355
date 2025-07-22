@@ -24,17 +24,38 @@
 #define ADXL355_INDEX_Y				1
 #define ADXL355_INDEX_Z				2
 
+// Flags for adxl355_general_settings() / adxl355_is_... (settings-related)
+#define ADXL355_I2C_HIGH_SPEED		1<<7
+#define ADXL355_I2C_FAST			0
+#define ADXL355_INT_ACTIVE_HIGH		1<<6
+#define ADXL355_INT_ACTIVE_LOW		0
+#define ADXL355_RANGE_2G			1
+#define ADXL355_RANGE_4G			2
+#define ADXL355_RANGE_8G			3
+
+/* ------------------------------------------------------------------------------------- */
+/* - Data types - */
+
+/*
+ * Represents a single adxl345 sensor on the I²C bus
+ */
 typedef struct
 {
 	i2c_inst_t *i2c_port;
 	uint8_t i2c_addr;
 } adxl355_sensor;
 
+/*
+ * Represents a single set of values read from a sensor
+ * (x-, y- and z-axis in this order)
+ */
 typedef union
 {
 	int32_t axis[3];
 	uint8_t raw[12];
 } adxl355_axis_data;
+
+/* ------------------------------------------------------------------------------------- */
 
 // Always 0xAD
 uint8_t adxl355_get_company_id (adxl355_sensor *sensor);
@@ -65,6 +86,20 @@ int adxl355_axis_get_data_raw_timeout (adxl355_sensor *sensor, uint8_t axis, uin
 int adxl355_get_x (adxl355_axis_data *data);
 int adxl355_get_y (adxl355_axis_data *data);
 int adxl355_get_z (adxl355_axis_data *data);
+
+bool adxl355_general_settings (adxl355_sensor *sensor, uint8_t flags);
+bool adxl355_power_settings (adxl355_sensor *sensor, uint8_t flags);
+
+uint8_t adxl355_get_general_settings (adxl355_sensor *sensor);
+#define adxl355_is_i2c_high_speed (settings)		((settings & ADXL355_I2C_HIGH_SPEED) != 0)
+#define adxl355_is_int_active_high (settings)	((settings & ADXL355_INT_ACTIVE_HIGH) != 0)
+#define adxl355_is_range_at_2g (settings)		((settings & ADXL355_RANGE_2G) != 0)
+#define adxl355_is_range_at_4g (settings)		((settings & ADXL355_RANGE_4G) != 0)
+#define adxl355_is_range_at_8g (settings)		((settings & ADXL355_RANGE_8G) != 0)
+
+/* ------------------------------------------------------------------------------------- */
+/* - Advanced darkness - */
+// It's easier to use the functions above, but feel free
 
 #define ADXL355_REG_DEVID_AD		0x00		// Read
 #define ADXL355_REG_DEVID_MST		0x01		// Read
