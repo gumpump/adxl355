@@ -12,6 +12,26 @@
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
 
+/* ------------------------------------------------------------------------------------- */
+
+/*
+ * PLEASE READ THIS BEFORE FIRST USE
+ * ESPECIALLY IF YOU DON'T KNOW, WHAT LSB MEANS
+ * 
+ * In this context, 1 LSB represents the smallest possible step.
+ * If you have 1 unsigned Byte, you have 255 possible, non-zero values.
+ * A value of 1 stands for 1 LSB, a value of 2 for 2 LSB.
+ * If you read something like "15.6 mg / LSB", it means the following:
+ *
+ * 		If you want to set 1 g (gravitational force, not weight),
+ * 		you have to divide 1 g by 0.0156 g (15.6 mg).
+ *			1 / 0.0156 = 64.102564...
+ *		Now you round the result of this division (64.102564... -> 64) and you got the amount
+ *		of LSBs you have to give the function.
+ */
+
+/* ------------------------------------------------------------------------------------- */
+
 // Internal flags for adxl355_is_... / adxl355_has_... (status-related)
 #define _ADXL355_STATUS_NVM_BUSY	1<<4
 #define _ADXL355_STATUS_ACTIVITY	1<<3
@@ -56,6 +76,11 @@ typedef union
 } adxl355_axis_data;
 
 /* ------------------------------------------------------------------------------------- */
+
+bool adxl355_init (adxl355_sensor *sensor, i2c_inst_t *i2c_port, uint8_t i2c_addr);
+
+//#define adxl355_start(sensor)
+//#define adxl355_stop(sensor)
 
 // Always 0xAD
 uint8_t adxl355_get_company_id (adxl355_sensor *sensor);
@@ -138,6 +163,8 @@ uint8_t adxl355_get_general_settings (adxl355_sensor *sensor);
 #define ADXL355_REG_POWER_CTL		0x2D		// Read / Write
 #define ADXL355_REG_SELF_TEST		0x2E		// Read / Write
 #define ADXL355_REG_RESET			0x2F		// Write
+
+#define ADXL355_REG_DATA_BEGIN_TEMP	ADXL355_REG_TEMP2
 
 #define ADXL355_REG_DATA_BEGIN_AXIS	ADXL355_REG_XDATA3
 
